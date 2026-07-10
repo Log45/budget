@@ -1,19 +1,12 @@
 package finance
 
 import (
+	"backend/models"
 	"math"
 )
 
-type Loan struct {
-	Principal Money
-	Rate      float64 // Annual interest rate as a decimal (e.g., 0.05 for 5%)
-	Term      int     // Term in months
-}
-
-type Payment struct {
-	Amount Money
-	Date   string // YYYY-MM-DD format
-}
+const Money = models.Money
+const Loan = models.Loan
 
 func CalculateMonthlyPayment(loan Loan) Money {
 	monthlyRate := loan.Rate / 12
