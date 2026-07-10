@@ -2,7 +2,17 @@ package api
 
 import (
 	"net/http"
+
+	"Log45/budget/backend/services"
 )
+
+type Handler struct {
+	Auth  services.AuthService
+	Users services.UserService
+	// TODO: Add services
+}
+
+func NewHandler(auth services.AuthService, users services.UserService) Handler
 
 func HealthHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
