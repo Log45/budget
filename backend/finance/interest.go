@@ -1,15 +1,18 @@
 package finance
 
-import "math"
+import (
+	"Log45/budget/backend/models"
+	"math"
+)
 
-func MonthlyInterest(balance Money, rate float64) Money {
-	return Money(float64(balance) * rate / 12)
+func MonthlyInterest(balance models.Money, rate float64) models.Money {
+	return models.Money(float64(balance) * rate / 12)
 }
 
-func AnnualInterest(balance Money, rate float64) Money {
-	return Money(float64(balance) * rate)
+func AnnualInterest(balance models.Money, rate float64) models.Money {
+	return models.Money(float64(balance) * rate)
 }
 
-func CompoundInterest(balance Money, rate float64, periods int, years int) Money {
-	return Money(float64(balance) * math.Pow(1+rate/float64(periods), float64(periods*years)))
+func CompoundInterest(balance models.Money, rate float64, periods int, years int) models.Money {
+	return models.Money(float64(balance) * math.Pow(1+rate/float64(periods), float64(periods*years)))
 }
