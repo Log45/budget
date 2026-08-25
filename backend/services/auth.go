@@ -17,6 +17,9 @@ var ErrUsernameExists = errors.New("username already exists")
 // ErrEmailExists is returned when registration is attempted with a taken email.
 var ErrEmailExists = errors.New("email already exists")
 
+// ErrInvalidToken is returned when a JWT cannot be authenticated.
+var ErrInvalidToken = errors.New("invalid token")
+
 // AuthService handles user registration, login, and JWT token generation.
 type AuthService struct {
 	users     *db.UserRepository
@@ -91,6 +94,29 @@ func (s *AuthService) GenerateToken(userID int64) (string, error) {
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(s.jwtSecret)
+}
+
+// ValidateToken verifies a budget-app JWT and returns its claims.
+func (s AuthService) ValidateToken(rawToken string) (Claims, error) {
+	claims := Claims{}
+
+	token, err := jwt.ParseWithClaims(
+		rawToken,
+		&claims,
+		func(token *jwt.Token) (any, error) {
+			if token.Method.Alg() != jwt.SigningMethodHS256.Alg() {
+				return nil, ErrInvalidToken
+			}
+			return s.jwtSecret, nil
+		},
+		jwt.WithIssuer("budget-app"),
+		jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}),
+	)
+	if err != nil || !token.Valid || claims.UserID <= 0 {
+		return Claims{}, ErrInvalidToken
+	}
+
+	return claims, nil
 }
 
 // Login verifies credentials and returns a JWT for the authenticated user.

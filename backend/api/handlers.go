@@ -57,18 +57,30 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 // LoanPaymentHandler is a placeholder for loan payment processing (Phase 3).
 func (h *Handler) LoanPaymentHandler(w http.ResponseWriter, r *http.Request) {
+	if _, ok := AuthenticatedUserID(r.Context()); !ok {
+		http.Error(w, "authentication required", http.StatusUnauthorized)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Loan payment processed"))
 }
 
 // CreateBudgetHandler is a placeholder for budget creation (Phase 4).
 func (h *Handler) CreateBudgetHandler(w http.ResponseWriter, r *http.Request) {
+	if _, ok := AuthenticatedUserID(r.Context()); !ok {
+		http.Error(w, "authentication required", http.StatusUnauthorized)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Budget created"))
 }
 
 // GetBudgetHandler is a placeholder for budget retrieval (Phase 4).
 func (h *Handler) GetBudgetHandler(w http.ResponseWriter, r *http.Request) {
+	if _, ok := AuthenticatedUserID(r.Context()); !ok {
+		http.Error(w, "authentication required", http.StatusUnauthorized)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Budget retrieved"))
 }

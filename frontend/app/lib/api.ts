@@ -11,6 +11,17 @@ async function request(path: string, fields: Record<string, string>): Promise<st
   return body;
 }
 
+// authenticatedFetch sends a request to a user-scoped endpoint with the saved
+// bearer token. Callers can provide any RequestInit, including a JSON body.
+export async function authenticatedFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  const token = getAuthToken();
+  if (!token) throw new Error("You must sign in to perform this action.");
+
+  const headers = new Headers(init.headers);
+  headers.set("Authorization", `Bearer ${token}`);
+  return fetch(path, { ...init, headers });
+}
+
 export const login = (username: string, password: string) => request("/api/login", { username, password });
 export const register = (username: string, email: string, password: string) => request("/api/register", { username, email, password });
 export const getAuthToken = () => typeof window === "undefined" ? null : window.localStorage.getItem(TOKEN_KEY);

@@ -5,6 +5,7 @@ import "net/http"
 // RegisterRoutes wires all HTTP routes to the given handler and returns the mux.
 func RegisterRoutes(h Handler) http.Handler {
 	mux := http.NewServeMux()
+	requireAuth := AuthMiddleware(h.Auth)
 
 	mux.HandleFunc("GET /health", HealthHandler)
 
@@ -15,9 +16,9 @@ func RegisterRoutes(h Handler) http.Handler {
 	// User routes
 	// TODO: Re-evaluate the need for user routes, if we have login, then we might not really need to query for the user except for maybe a user page?
 
-	mux.HandleFunc("POST /loans/payment", h.LoanPaymentHandler)
-	mux.HandleFunc("POST /budgets", h.CreateBudgetHandler)
-	mux.HandleFunc("GET /budgets", h.GetBudgetHandler)
+	mux.Handle("POST /loans/payment", requireAuth(http.HandlerFunc(h.LoanPaymentHandler)))
+	mux.Handle("POST /budgets", requireAuth(http.HandlerFunc(h.CreateBudgetHandler)))
+	mux.Handle("GET /budgets", requireAuth(http.HandlerFunc(h.GetBudgetHandler)))
 
 	return mux
 }

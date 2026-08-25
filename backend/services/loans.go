@@ -10,5 +10,5 @@ func CalculateMonthlyPayment(loan models.Loan) models.Money {
 }
 
 func GenerateSchedules(loan models.Loan) []models.Money {
-	return finance.GenerateSchedules(loan)
+	return finance.GenerateSchedules(loan, CalculateMonthlyPayment(loan))
 }

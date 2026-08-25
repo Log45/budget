@@ -1,5 +1,5 @@
 // math_test.go
-package math
+package tests
 
 import "testing"
 

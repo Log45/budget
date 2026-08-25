@@ -30,10 +30,10 @@ This tracks work needed before the budgeting/finances website prototype is runna
 ## Phase 2 — Frontend (does not exist yet)
 
 - [x] **Choose and scaffold frontend** — React/Next.js or similar with tab-based navigation
-- [ ] **Auth UI** — register, login, session/token handling
-- [ ] **API client layer** — typed calls to backend endpoints
-- [ ] **Shared layout** — nav tabs: Budget, Expenses, Properties, Loans, (Investments)
-- [ ] **Dev proxy / CORS** — frontend on one port talking to backend `:8080`
+- [x] **Auth UI** — register, login, session/token handling
+- [x] **API client layer** — typed calls to backend endpoints
+- [x] **Shared layout** — nav tabs: Budget, Expenses, Properties, Loans, (Investments)
+- [x] **Dev proxy / CORS** — frontend on one port talking to backend `:8080`
 
 ---
 
@@ -41,6 +41,7 @@ This tracks work needed before the budgeting/finances website prototype is runna
 
 **Requirement:** Visualize loans, balance & interest, predicted future balance, payment scheduling, interest vs. principal analytics.
 
+- [ ] **Revisit Loan logic/required features** - Before implementing API endpoints, it needs to be determined what is needed for proper analysis of loans. 
 - [ ] **Fix amortization schedule** — `GenerateSchedules` needs per-payment principal/interest/balance breakdown
 - [ ] **Add loan payment simulation** — apply extra payments, recalculate schedule, show total interest saved
 - [ ] **Loan persistence** — implement `LoanRepository` (currently struct-only stub)
