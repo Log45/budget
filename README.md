@@ -1,6 +1,6 @@
-# Budget App
+# Insight
 
-Personal finance prototype backend for budgeting, loan simulation, expense tracking, and property management.
+Personal finance app for budgeting, loan simulation, expense tracking, and property management.
 
 ## Prerequisites
 
@@ -37,6 +37,16 @@ Personal finance prototype backend for budgeting, loan simulation, expense track
    ```powershell
    curl http://localhost:8080/health
    ```
+
+5. **Run the complete app with Docker**
+
+   ```powershell
+   docker compose up --build
+   ```
+
+   Open `http://localhost:3000`. The web proxy forwards browser requests under
+   `/api` to the backend, so the frontend and API use one origin and do not need
+   CORS for the containerized deployment.
 
 ## Environment variables
 

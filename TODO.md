@@ -29,7 +29,7 @@ This tracks work needed before the budgeting/finances website prototype is runna
 
 ## Phase 2 — Frontend (does not exist yet)
 
-- [ ] **Choose and scaffold frontend** — React/Next.js or similar with tab-based navigation
+- [x] **Choose and scaffold frontend** — React/Next.js or similar with tab-based navigation
 - [ ] **Auth UI** — register, login, session/token handling
 - [ ] **API client layer** — typed calls to backend endpoints
 - [ ] **Shared layout** — nav tabs: Budget, Expenses, Properties, Loans, (Investments)
