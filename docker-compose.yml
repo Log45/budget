@@ -1,12 +1,16 @@
 services:
-  # backend:
-  #   build: ./backend
-  #   ports:
-  #     - "8080:8080"
-  #   environment:
-  #     - PLAID_CLIENT_ID=${PLAID_CLIENT_ID}
-  #     - PLAID_SECRET=${PLAID_SECRET}
-  #     - PLAID_ENV=${PLAID_ENV}
+  backend:
+    build: ./backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/budget?sslmode=disable
+      JWT_SECRET: "change-me-in-production"
+      PLAID_CLIENT_ID: ${PLAID_CLIENT_ID}
+      PLAID_SECRET: ${PLAID_SECRET}
+      PLAID_ENV: ${PLAID_ENV}
   postgres:
     image: postgres:18
     environment:

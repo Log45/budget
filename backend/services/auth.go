@@ -11,20 +11,26 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// ErrUsernameExists is returned when registration is attempted with a taken username.
 var ErrUsernameExists = errors.New("username already exists")
+
+// ErrEmailExists is returned when registration is attempted with a taken email.
 var ErrEmailExists = errors.New("email already exists")
 
+// AuthService handles user registration, login, and JWT token generation.
 type AuthService struct {
 	users     *db.UserRepository
 	jwtSecret []byte
 }
 
+// Claims holds the JWT payload for authenticated requests.
 type Claims struct {
 	UserID int64 `json:"user_id"`
 
 	jwt.RegisteredClaims
 }
 
+// NewAuthService returns an AuthService using the given user repository and JWT secret.
 func NewAuthService(
 	users *db.UserRepository,
 	jwtSecret string,
@@ -35,6 +41,7 @@ func NewAuthService(
 	}
 }
 
+// Register creates a new user account after checking username and email uniqueness.
 func (s *AuthService) Register(
 	ctx context.Context,
 	username string,
@@ -72,6 +79,7 @@ func (s *AuthService) Register(
 	return nil
 }
 
+// GenerateToken creates a signed JWT for the given user ID, valid for 24 hours.
 func (s *AuthService) GenerateToken(userID int64) (string, error) {
 	claims := Claims{
 		UserID: userID,
@@ -85,6 +93,7 @@ func (s *AuthService) GenerateToken(userID int64) (string, error) {
 	return token.SignedString(s.jwtSecret)
 }
 
+// Login verifies credentials and returns a JWT for the authenticated user.
 func (s *AuthService) Login(
 	ctx context.Context,
 	username string,

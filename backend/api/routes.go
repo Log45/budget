@@ -2,16 +2,22 @@ package api
 
 import "net/http"
 
-func RegisterRoutes() http.Handler {
+// RegisterRoutes wires all HTTP routes to the given handler and returns the mux.
+func RegisterRoutes(h Handler) http.Handler {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /health", HealthHandler)
 
-	mux.HandleFunc("POST /loan/payment", LoanPaymentHandler)
+	// Authentication routes
+	mux.HandleFunc("POST /register", h.RegisterHandler)
+	mux.HandleFunc("POST /login", h.LoginHandler)
 
-	mux.HandleFunc("POST /budget", CreateBudgetHandler)
+	// User routes
+	// TODO: Re-evaluate the need for user routes, if we have login, then we might not really need to query for the user except for maybe a user page?
 
-	mux.HandleFunc("GET /budget", GetBudgetHandler)
+	mux.HandleFunc("POST /loans/payment", h.LoanPaymentHandler)
+	mux.HandleFunc("POST /budgets", h.CreateBudgetHandler)
+	mux.HandleFunc("GET /budgets", h.GetBudgetHandler)
 
 	return mux
 }

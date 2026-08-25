@@ -6,34 +6,43 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/joho/godotenv"
+
 	"Log45/budget/backend/api"
 	"Log45/budget/backend/db"
 	"Log45/budget/backend/services"
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("No .env file found, relying on environment variables")
+	}
+
 	ctx := context.Background()
 
-	pool, err := db.NewPool(ctx, os.Getenv("DATABASE_URL"))
+	databaseURL := os.Getenv("DATABASE_URL")
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		log.Fatal("JWT_SECRET is required")
+	}
+
+	pool, err := db.NewPool(ctx, databaseURL)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer pool.Close()
 
+	if err := db.Migrate(ctx, pool); err != nil {
+		log.Fatalf("apply migrations: %v", err)
+	}
+
 	userRepo := db.NewUserRepository(pool)
-
 	userService := services.NewUserService(userRepo)
-
-	authService := services.NewAuthService(
-		userRepo,
-		os.Getenv("JWT_SECRET"),
-	)
+	authService := services.NewAuthService(userRepo, jwtSecret)
 
 	handler := api.NewHandler(*authService, *userService)
-
-	router := api.RegisterRoutes()
-
-	_ = handler // placeholder to remove errors, update functionality.
+	router := api.RegisterRoutes(handler)
 
 	log.Println("Server started on :8080")
 	log.Fatal(http.ListenAndServe(":8080", router))
