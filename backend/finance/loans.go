@@ -6,22 +6,50 @@ import (
 )
 
 func CalculateMonthlyPayment(loan models.Loan) models.Money {
-	monthlyRate := loan.Rate / float64(loan.Term)
+	if loan.Term <= 0 || loan.CurrentBalance <= 0 {
+		return 0
+	}
+	monthlyRate := loan.Rate / 12
 	term := float64(loan.Term)
 	if monthlyRate == 0 {
-		return loan.Principal / models.Money(term)
+		return loan.CurrentBalance / models.Money(term)
 	}
 	// Using the formula for an amortizing loan payment
-	payment := float64(loan.Principal) * (monthlyRate * math.Pow(1+monthlyRate, term)) / (math.Pow(1+monthlyRate, term) - 1)
-	return models.Money(payment)
+	payment := float64(loan.CurrentBalance) * (monthlyRate * math.Pow(1+monthlyRate, term)) / (math.Pow(1+monthlyRate, term) - 1)
+	return models.Money(math.Ceil(payment))
 }
 
-// TODO: Change this to use the actual balance to generate an amortization schedule. Needs per-payment principal/interest/balance breakdown
-func GenerateSchedules(loan models.Loan, monthlyPayment models.Money) []models.Money {
-	schedules := make([]models.Money, loan.Term)
-	monthlyRate := loan.Rate / 12
-	for i := 0; i < loan.Term; i++ {
-		schedules[i] = MonthlyInterest(loan.Principal, monthlyRate)
+// GenerateSchedule creates an amortization schedule starting from the current balance.
+func GenerateSchedule(loan models.Loan, monthlyPayment models.Money) []models.LoanPayment {
+	if loan.Term <= 0 || loan.CurrentBalance <= 0 || monthlyPayment <= 0 {
+		return []models.LoanPayment{}
 	}
-	return schedules
+	balance := loan.CurrentBalance
+	monthlyRate := loan.Rate / 12
+	schedule := make([]models.LoanPayment, 0, loan.Term)
+	for i := 0; i < loan.Term && balance > 0; i++ {
+		interest := models.Money(math.Round(float64(balance) * monthlyRate))
+		principal := monthlyPayment - interest
+		payment := monthlyPayment
+		if principal <= 0 {
+			break
+		}
+		if principal >= balance {
+			principal = balance
+			payment = principal + interest
+		}
+		balance -= principal
+		schedule = append(schedule, models.LoanPayment{Number: i + 1, DueDate: loan.StartDate.AddDate(0, i+1, 0), Payment: payment, Principal: principal, Interest: interest, Balance: balance})
+	}
+	return schedule
+}
+
+// GenerateSchedules is retained for callers that only need each payment's interest.
+func GenerateSchedules(loan models.Loan, monthlyPayment models.Money) []models.Money {
+	schedule := GenerateSchedule(loan, monthlyPayment)
+	result := make([]models.Money, len(schedule))
+	for i, payment := range schedule {
+		result[i] = payment.Interest
+	}
+	return result
 }

@@ -38,10 +38,16 @@ func main() {
 	}
 
 	userRepo := db.NewUserRepository(pool)
+	loanRepo := db.NewLoanRepository(pool)
+	transactionRepo := db.NewTransactionRepository(pool)
+	categoryRepo := db.NewCategoryRepository(pool)
 	userService := services.NewUserService(userRepo)
 	authService := services.NewAuthService(userRepo, jwtSecret)
+	loanService := services.NewLoanService(loanRepo)
+	transactionService := services.NewTransactionService(transactionRepo, categoryRepo)
+	categoryService := services.NewCategoryService(categoryRepo)
 
-	handler := api.NewHandler(*authService, *userService)
+	handler := api.NewHandler(*authService, *userService, loanService, transactionService, categoryService)
 	router := api.RegisterRoutes(handler)
 
 	log.Println("Server started on :8080")
