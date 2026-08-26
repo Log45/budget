@@ -1,0 +1,10 @@
+export type Category = { id: number; name: string; transaction_type: number; is_default: boolean };
+export type BudgetCategory = { category_id: number; planned_amount: number };
+export type Budget = { id: number; name: string; type: number; net_income: number; balance: number; categories: BudgetCategory[] };
+export type Loan = { id: number; name: string; principal: number; current_balance: number; rate: number; term: number; start_date: string };
+export type Property = { id: number; name: string; address: string; type: string; purchase_price?: number; current_value?: number; loan_id?: number };
+export type Transaction = { id: string; amount: number; description: string; type: number; date: string; budget_id?: number; category_id?: number; property_id?: number };
+export const dollars = (cents?: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format((cents ?? 0) / 100);
+export const cents = (value: string) => Math.round((Number(value) || 0) * 100);
+export const today = () => new Date().toISOString().slice(0, 10);
+export const apiDate = (date: string) => `${date}T00:00:00Z`;

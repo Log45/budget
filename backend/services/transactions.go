@@ -15,10 +15,12 @@ var ErrInvalidTransaction = errors.New("amount must be positive, type valid, and
 type TransactionService struct {
 	transactions *db.TransactionRepository
 	categories   *db.CategoryRepository
+	budgets      *db.BudgetRepository
+	properties   *db.PropertyRepository
 }
 
-func NewTransactionService(t *db.TransactionRepository, c *db.CategoryRepository) *TransactionService {
-	return &TransactionService{transactions: t, categories: c}
+func NewTransactionService(t *db.TransactionRepository, c *db.CategoryRepository, b *db.BudgetRepository, p *db.PropertyRepository) *TransactionService {
+	return &TransactionService{transactions: t, categories: c, budgets: b, properties: p}
 }
 func (s *TransactionService) List(ctx context.Context, userID int64) ([]models.Transaction, error) {
 	return s.transactions.List(ctx, userID)
@@ -67,6 +69,16 @@ func (s *TransactionService) validate(ctx context.Context, userID int64, t *mode
 		}
 		if !ok {
 			return db.ErrCategoryNotFound
+		}
+	}
+	if t.BudgetID != nil {
+		if _, err := s.budgets.Get(ctx, userID, *t.BudgetID); err != nil {
+			return err
+		}
+	}
+	if t.PropertyID != nil {
+		if _, err := s.properties.Get(ctx, userID, *t.PropertyID); err != nil {
+			return err
 		}
 	}
 	return nil

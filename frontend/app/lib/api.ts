@@ -22,6 +22,16 @@ export async function authenticatedFetch(path: string, init: RequestInit = {}): 
   return fetch(path, { ...init, headers });
 }
 
+// apiJSON sends and receives the backend's JSON contract, adding the session token.
+export async function apiJSON<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const headers = new Headers(init.headers);
+  headers.set("Content-Type", "application/json");
+  const response = await authenticatedFetch(path, { ...init, headers });
+  if (!response.ok) throw new Error((await response.text()).trim() || "The request could not be completed.");
+  if (response.status === 204) return undefined as T;
+  return response.json() as Promise<T>;
+}
+
 export const login = (username: string, password: string) => request("/api/login", { username, password });
 export const register = (username: string, email: string, password: string) => request("/api/register", { username, email, password });
 export const getAuthToken = () => typeof window === "undefined" ? null : window.localStorage.getItem(TOKEN_KEY);

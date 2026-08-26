@@ -41,12 +41,12 @@ This tracks work needed before the budgeting/finances website prototype is runna
 
 **Requirement:** Visualize loans, balance & interest, predicted future balance, payment scheduling, interest vs. principal analytics.
 
-- [ ] **Revisit Loan logic/required features** - Before implementing API endpoints, it needs to be determined what is needed for proper analysis of loans. 
-- [ ] **Fix amortization schedule** — `GenerateSchedules` needs per-payment principal/interest/balance breakdown
+- [x] **Revisit Loan logic/required features** - Before implementing API endpoints, it needs to be determined what is needed for proper analysis of loans. 
+- [x] **Fix amortization schedule** — `GenerateSchedules` needs per-payment principal/interest/balance breakdown
 - [ ] **Add loan payment simulation** — apply extra payments, recalculate schedule, show total interest saved
-- [ ] **Loan persistence** — implement `LoanRepository` (currently struct-only stub)
-- [ ] **Loan service** — CRUD, payment recording, schedule generation, future balance projection
-- [ ] **Loan API routes** — `GET /loans`, `POST /loans`, `GET /loans/{id}`, `POST /loans/payment`, `GET /loans/{id}/schedule`, `GET /loans/{id}/analytics`
+- [x] **Loan persistence** — implement `LoanRepository` (currently struct-only stub)
+- [x] **Loan service** — CRUD, payment recording, schedule generation, future balance projection
+- [x] **Loan API routes** — `GET /loans`, `POST /loans`, `GET /loans/{id}`, `POST /loans/payment`, `GET /loans/{id}/schedule`, `GET /loans/{id}/analytics`
 - [ ] **Loan analytics endpoints** — cumulative interest vs. principal, payoff date, remaining interest
 - [ ] **Loans tab UI** — loan list, detail view, amortization chart/table, payment simulator, interest vs. principal visualization
 

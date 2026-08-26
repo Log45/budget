@@ -18,7 +18,26 @@ func NewTransactionRepository(pool *pgxpool.Pool) *TransactionRepository {
 	return &TransactionRepository{pool: pool}
 }
 func (r *TransactionRepository) Create(ctx context.Context, t *models.Transaction) error {
-	return r.pool.QueryRow(ctx, `INSERT INTO transactions (id,user_id,budget_id,category_id,property_id,account_id,amount,description,type,source,destination,date) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING created_at,updated_at`, t.ID, t.UserID, t.BudgetID, t.CategoryID, t.PropertyID, t.AccountID, t.Amount, t.Description, t.Type, t.Source, t.Destination, t.Date).Scan(&t.CreatedAt, &t.UpdatedAt)
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+	if err := tx.QueryRow(ctx, `INSERT INTO transactions (id,user_id,budget_id,category_id,property_id,account_id,amount,description,type,source,destination,date) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING created_at,updated_at`, t.ID, t.UserID, t.BudgetID, t.CategoryID, t.PropertyID, t.AccountID, t.Amount, t.Description, t.Type, t.Source, t.Destination, t.Date).Scan(&t.CreatedAt, &t.UpdatedAt); err != nil {
+		return err
+	}
+	if t.Type == models.Expense && t.BudgetID != nil && t.CategoryID != nil {
+		tag, err := tx.Exec(ctx, `UPDATE budget_categories SET planned_amount = planned_amount + $1 WHERE budget_id = $2 AND category_id = $3`, t.Amount, *t.BudgetID, *t.CategoryID)
+		if err != nil {
+			return err
+		}
+		if tag.RowsAffected() > 0 {
+			if _, err := tx.Exec(ctx, `UPDATE budgets SET balance = balance - $1, updated_at = NOW() WHERE id = $2 AND user_id = $3`, t.Amount, *t.BudgetID, t.UserID); err != nil {
+				return err
+			}
+		}
+	}
+	return tx.Commit(ctx)
 }
 func (r *TransactionRepository) List(ctx context.Context, userID int64) ([]models.Transaction, error) {
 	rows, err := r.pool.Query(ctx, `SELECT id,user_id,budget_id,category_id,property_id,account_id,amount,description,type,source,destination,date,created_at,updated_at FROM transactions WHERE user_id=$1 ORDER BY date DESC,created_at DESC`, userID)
