@@ -42,6 +42,11 @@ func RegisterRoutes(h Handler) http.Handler {
 	mux.Handle("PUT /properties/{id}", requireAuth(http.HandlerFunc(h.UpdatePropertyHandler)))
 	mux.Handle("DELETE /properties/{id}", requireAuth(http.HandlerFunc(h.DeletePropertyHandler)))
 	mux.Handle("GET /properties/{id}/analytics", requireAuth(http.HandlerFunc(h.PropertyAnalyticsHandler)))
+	mux.Handle("GET /accounts", requireAuth(http.HandlerFunc(h.ListAccountsHandler)))
+	mux.Handle("POST /accounts", requireAuth(http.HandlerFunc(h.CreateAccountHandler)))
+	mux.Handle("GET /accounts/{id}", requireAuth(http.HandlerFunc(h.GetAccountHandler)))
+	mux.Handle("PUT /accounts/{id}", requireAuth(http.HandlerFunc(h.UpdateAccountHandler)))
+	mux.Handle("DELETE /accounts/{id}", requireAuth(http.HandlerFunc(h.DeleteAccountHandler)))
 
 	return mux
 }

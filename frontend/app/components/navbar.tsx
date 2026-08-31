@@ -2,7 +2,7 @@ import { Container, Nav, Navbar as BootstrapNavbar } from "react-bootstrap";
 import { Link, NavLink, useNavigate } from "react-router";
 import { clearAuthToken } from "../lib/api";
 
-const navigation = [["/", "Home"], ["/budget", "Budget"], ["/expenses", "Expenses"], ["/investments", "Investments"], ["/properties", "Properties"], ["/loans", "Loans"]] as const;
+const navigation = [["/", "Home"], ["/budget", "Budget"], ["/expenses", "Expenses"], ["/accounts", "Accounts"], ["/investments", "Investments"], ["/properties", "Properties"], ["/loans", "Loans"]] as const;
 
 export function AppNavbar() {
   const navigate = useNavigate();

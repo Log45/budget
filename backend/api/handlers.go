@@ -21,10 +21,11 @@ type Handler struct {
 	Categories   *services.CategoryService
 	Budgets      *services.BudgetService
 	Properties   *services.PropertyService
+	Accounts     *services.AccountService
 }
 
 // NewHandler constructs a Handler with the services required by the API layer.
-func NewHandler(auth services.AuthService, users services.UserService, loans *services.LoanService, transactions *services.TransactionService, categories *services.CategoryService, budgets *services.BudgetService, properties *services.PropertyService) Handler {
+func NewHandler(auth services.AuthService, users services.UserService, loans *services.LoanService, transactions *services.TransactionService, categories *services.CategoryService, budgets *services.BudgetService, properties *services.PropertyService, accounts *services.AccountService) Handler {
 	return Handler{
 		Auth:         auth,
 		Users:        users,
@@ -33,7 +34,80 @@ func NewHandler(auth services.AuthService, users services.UserService, loans *se
 		Categories:   categories,
 		Budgets:      budgets,
 		Properties:   properties,
+		Accounts:     accounts,
 	}
+}
+
+func accountID(r *http.Request) (int64, error) { return strconv.ParseInt(r.PathValue("id"), 10, 64) }
+func (h *Handler) ListAccountsHandler(w http.ResponseWriter, r *http.Request) {
+	userID, _ := AuthenticatedUserID(r.Context())
+	items, err := h.Accounts.List(r.Context(), userID)
+	if err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, items)
+}
+func (h *Handler) CreateAccountHandler(w http.ResponseWriter, r *http.Request) {
+	userID, _ := AuthenticatedUserID(r.Context())
+	var item models.Account
+	if json.NewDecoder(r.Body).Decode(&item) != nil {
+		http.Error(w, "invalid JSON request", http.StatusBadRequest)
+		return
+	}
+	created, err := h.Accounts.Create(r.Context(), userID, item)
+	if err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, created)
+}
+func (h *Handler) GetAccountHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := accountID(r)
+	if err != nil || id <= 0 {
+		http.Error(w, "invalid account id", http.StatusBadRequest)
+		return
+	}
+	userID, _ := AuthenticatedUserID(r.Context())
+	item, err := h.Accounts.Get(r.Context(), userID, id)
+	if err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, item)
+}
+func (h *Handler) UpdateAccountHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := accountID(r)
+	if err != nil || id <= 0 {
+		http.Error(w, "invalid account id", http.StatusBadRequest)
+		return
+	}
+	var item models.Account
+	if json.NewDecoder(r.Body).Decode(&item) != nil {
+		http.Error(w, "invalid JSON request", http.StatusBadRequest)
+		return
+	}
+	item.ID = id
+	userID, _ := AuthenticatedUserID(r.Context())
+	updated, err := h.Accounts.Update(r.Context(), userID, item)
+	if err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, updated)
+}
+func (h *Handler) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := accountID(r)
+	if err != nil || id <= 0 {
+		http.Error(w, "invalid account id", http.StatusBadRequest)
+		return
+	}
+	userID, _ := AuthenticatedUserID(r.Context())
+	if err := h.Accounts.Delete(r.Context(), userID, id); err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func writeJSON(w http.ResponseWriter, status int, value any) {
@@ -63,7 +137,15 @@ func writeServiceError(w http.ResponseWriter, err error) {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
+	if errors.Is(err, db.ErrAccountNotFound) {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
 	if errors.Is(err, services.ErrInvalidBudget) || errors.Is(err, services.ErrInvalidProperty) {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if errors.Is(err, services.ErrInvalidAccount) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

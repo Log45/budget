@@ -1,0 +1,32 @@
+import { useEffect, useState } from "react";
+import { Button, Card, Col, Form, Modal, Row } from "react-bootstrap";
+import { AddButton, TabLayout } from "../components/tab-layout";
+import { apiJSON } from "../lib/api";
+import { cents, dollars, type Account } from "../lib/models";
+
+const accountGroups: ReadonlyArray<{ label: string; options: ReadonlyArray<readonly [string, string]> }> = [
+  { label: "Bank Accounts", options: [["savings", "Savings"], ["checking", "Checking"], ["hybrid", "Hybrid Savings + Checking"]] },
+  { label: "Brokerage Accounts", options: [["individual_brokerage", "Individual"], ["roth_ira", "Roth IRA"], ["ira", "IRA"]] },
+  { label: "Retirement Accounts", options: [["401k", "401(k)"], ["403b", "403(b)"], ["457b", "457(b)"]] },
+  { label: "Credit", options: [["credit_card", "Credit Card"]] },
+];
+const typeLabels = Object.fromEntries(accountGroups.flatMap(group => group.options)) as Record<string, string>;
+
+export default function AccountsPage() {
+  const [accounts, setAccounts] = useState<Account[]>([]), [editing, setEditing] = useState<Account | null | undefined>(), [deleting, setDeleting] = useState<Account | null>(null), [error, setError] = useState(""), [loading, setLoading] = useState(true);
+  const load = async () => { try { setAccounts(await apiJSON<Account[]>("/api/accounts")); } catch (e) { setError(e instanceof Error ? e.message : "Unable to load accounts."); } finally { setLoading(false); } };
+  useEffect(() => { void load(); }, []);
+  const remove = async () => { if (!deleting) return; try { await apiJSON(`/api/accounts/${deleting.id}`, { method: "DELETE" }); setDeleting(null); await load(); } catch (e) { setError(e instanceof Error ? e.message : "Unable to delete account."); } };
+  return <TabLayout title="Accounts" description="Track balances for manually managed financial accounts." action={<AddButton label="account" onClick={() => setEditing(null)} />} error={error} loading={loading}>
+    {accounts.length ? <Row className="g-4">{accounts.map(account => <Col md={6} xl={4} key={account.id}><Card className="h-100"><Card.Body><div className="d-flex justify-content-between gap-2"><div><Card.Title>{account.name}</Card.Title><div className="text-body-secondary">{typeLabels[account.account_type] ?? account.account_type}</div></div><div className="d-flex align-items-start gap-2"><Button size="sm" variant="outline-primary" onClick={() => setEditing(account)}>Edit</Button><Button size="sm" variant="outline-danger" onClick={() => setDeleting(account)}>Delete</Button></div></div><div className="display-6 mt-3">{dollars(account.balance)}</div><small className="text-body-secondary">Current balance</small>{account.account_type === "credit_card" && <div className="mt-3"><strong>Credit limit:</strong> {account.limit === undefined ? "Not set" : dollars(account.limit)}{account.limit !== undefined && <div className="text-body-secondary">Available credit: {dollars(account.limit - account.balance)}</div>}</div>}</Card.Body></Card></Col>)}</Row> : <Card body className="text-center py-5 text-body-secondary">No accounts yet. Add an account to begin tracking balances.</Card>}
+    <AccountForm open={editing !== undefined} account={editing ?? null} onHide={() => setEditing(undefined)} onSaved={() => { setEditing(undefined); void load(); }} />
+    <Modal show={!!deleting} onHide={() => setDeleting(null)}><Modal.Header closeButton><Modal.Title>Delete account?</Modal.Title></Modal.Header><Modal.Body>Delete “{deleting?.name}”? Existing transactions will be preserved without an account assignment.</Modal.Body><Modal.Footer><Button variant="secondary" onClick={() => setDeleting(null)}>Cancel</Button><Button variant="danger" onClick={remove}>Delete</Button></Modal.Footer></Modal>
+  </TabLayout>;
+}
+
+function AccountForm({ open, account, onHide, onSaved }: { open: boolean; account: Account | null; onHide: () => void; onSaved: () => void }) {
+  const [name, setName] = useState(""), [type, setType] = useState("checking"), [balance, setBalance] = useState(""), [limit, setLimit] = useState(""), [error, setError] = useState(""), [saving, setSaving] = useState(false);
+  useEffect(() => { if (!open) return; setName(account?.name ?? ""); setType(account?.account_type ?? "checking"); setBalance(account ? String(account.balance / 100) : ""); setLimit(account?.limit === undefined ? "" : String(account.limit / 100)); setError(""); }, [open, account]);
+  const save = async (event: React.FormEvent) => { event.preventDefault(); if (type === "credit_card" && limit && cents(limit) < 0) { setError("Credit limit cannot be negative."); return; } setSaving(true); try { await apiJSON(account ? `/api/accounts/${account.id}` : "/api/accounts", { method: account ? "PUT" : "POST", body: JSON.stringify({ name, account_type: type, balance: cents(balance), limit: type === "credit_card" && limit ? cents(limit) : undefined }) }); onSaved(); } catch (e) { setError(e instanceof Error ? e.message : "Unable to save account."); } finally { setSaving(false); } };
+  return <Modal show={open} onHide={onHide}><Form onSubmit={save}><Modal.Header closeButton><Modal.Title>{account ? "Edit account" : "Add account"}</Modal.Title></Modal.Header><Modal.Body>{error && <div className="alert alert-danger">{error}</div>}<Form.Group className="mb-3"><Form.Label>Name</Form.Label><Form.Control required placeholder="e.g. Main checking" value={name} onChange={e => setName(e.target.value)} /></Form.Group><Form.Group className="mb-3"><Form.Label>Account type</Form.Label><Form.Select value={type} onChange={e => setType(e.target.value)}>{accountGroups.map(group => <optgroup label={group.label} key={group.label}>{group.options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</optgroup>)}</Form.Select></Form.Group><Form.Group className="mb-3"><Form.Label>Current balance</Form.Label><Form.Control required type="number" step="0.01" value={balance} onChange={e => setBalance(e.target.value)} /></Form.Group>{type === "credit_card" && <Form.Group><Form.Label>Credit limit <span className="text-body-secondary">(optional)</span></Form.Label><Form.Control type="number" min="0" step="0.01" value={limit} onChange={e => setLimit(e.target.value)} /></Form.Group>}</Modal.Body><Modal.Footer><Button variant="secondary" onClick={onHide}>Cancel</Button><Button type="submit" disabled={saving}>{saving ? "Saving…" : "Save account"}</Button></Modal.Footer></Form></Modal>;
+}

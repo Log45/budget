@@ -6,6 +6,7 @@ export default [
   route("register", "routes/register.tsx"),
   route("budget", "routes/budget_editor.tsx"),
   route("expenses", "routes/expenses_editor.tsx"),
+  route("accounts", "routes/accounts.tsx"),
   route("investments", "routes/investments.tsx"),
   route("properties", "routes/properties.tsx"),
   route("loans", "routes/loans.tsx"),
