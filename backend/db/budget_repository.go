@@ -86,12 +86,50 @@ func (r *BudgetRepository) Update(ctx context.Context, b *models.Budget) error {
 	// when an expense is linked to this budget). An explicit empty array clears
 	// all allocations.
 	if b.Categories != nil {
+		if err = r.uncategorizeRemovedExpenses(ctx, tx, b); err != nil {
+			return err
+		}
 		if err = r.replaceCategories(ctx, tx, b); err != nil {
 			return err
 		}
 	}
 	return tx.Commit(ctx)
 }
+
+func (r *BudgetRepository) uncategorizeRemovedExpenses(ctx context.Context, tx pgx.Tx, b *models.Budget) error {
+	rows, err := tx.Query(ctx, `SELECT category_id FROM budget_categories WHERE budget_id=$1`, b.ID)
+	if err != nil {
+		return err
+	}
+	existing := []int64{}
+	for rows.Next() {
+		var categoryID int64
+		if err := rows.Scan(&categoryID); err != nil {
+			rows.Close()
+			return err
+		}
+		existing = append(existing, categoryID)
+	}
+	err = rows.Err()
+	rows.Close()
+	if err != nil {
+		return err
+	}
+	kept := make(map[int64]bool, len(b.Categories))
+	for _, category := range b.Categories {
+		kept[category.CategoryID] = true
+	}
+	for _, categoryID := range existing {
+		if kept[categoryID] {
+			continue
+		}
+		if _, err := tx.Exec(ctx, `UPDATE transactions SET category_id=NULL,updated_at=NOW() WHERE user_id=$1 AND budget_id=$2 AND category_id=$3`, b.UserID, b.ID, categoryID); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (r *BudgetRepository) Delete(ctx context.Context, userID, id int64) error {
 	tag, err := r.pool.Exec(ctx, `DELETE FROM budgets WHERE id=$1 AND user_id=$2`, id, userID)
 	if err != nil {

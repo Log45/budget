@@ -4,7 +4,7 @@ import { apiJSON } from "../lib/api";
 import { cents, type Budget, type BudgetCategory, type Category, dollars } from "../lib/models";
 import { AddButton, TabLayout } from "../components/tab-layout";
 
-const types = ["Yearly", "Monthly", "Weekly", "Daily"];
+const types = ["Yearly", "Monthly", "Bi-Weekly", "Semi-Monthly", "Weekly", "Daily"];
 export default function BudgetPage() {
   const [budgets, setBudgets] = useState<Budget[]>([]), [categories, setCategories] = useState<Category[]>([]), [show, setShow] = useState(false), [editing, setEditing] = useState<Budget | null>(null), [error, setError] = useState(""), [loading, setLoading] = useState(true);
   const load = async () => { try { const [listed, c] = await Promise.all([apiJSON<Budget[]>("/api/budgets"), apiJSON<Category[]>("/api/categories")]); setBudgets(await Promise.all(listed.map(b => apiJSON<Budget>(`/api/budgets/${b.id}`)))); setCategories(c); } catch (e) { setError(e instanceof Error ? e.message : "Unable to load budgets."); } finally { setLoading(false); } };

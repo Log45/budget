@@ -135,16 +135,18 @@ func (h *Handler) UpdateTransactionHandler(w http.ResponseWriter, r *http.Reques
 // transactionInput accepts the date-only values emitted by HTML date controls
 // as well as RFC 3339 timestamps from API clients.
 type transactionInput struct {
-	BudgetID    *int64                 `json:"budget_id"`
-	CategoryID  *int64                 `json:"category_id"`
-	PropertyID  *int64                 `json:"property_id"`
-	AccountID   *int64                 `json:"account_id"`
-	Amount      models.Money           `json:"amount"`
-	Description string                 `json:"description"`
-	Type        models.TransactionType `json:"type"`
-	Source      string                 `json:"source"`
-	Destination string                 `json:"destination"`
-	Date        string                 `json:"date"`
+	BudgetID      *int64                 `json:"budget_id"`
+	CategoryID    *int64                 `json:"category_id"`
+	PropertyID    *int64                 `json:"property_id"`
+	AccountID     *int64                 `json:"account_id"`
+	Amount        models.Money           `json:"amount"`
+	Description   string                 `json:"description"`
+	Type          models.TransactionType `json:"type"`
+	Source        string                 `json:"source"`
+	Destination   string                 `json:"destination"`
+	Date          string                 `json:"date"`
+	Recurring     bool                   `json:"recurring"`
+	RecurringType models.BudgetType      `json:"recurring_type"`
 }
 
 func decodeTransaction(r *http.Request) (models.Transaction, error) {
@@ -159,7 +161,7 @@ func decodeTransaction(r *http.Request) (models.Transaction, error) {
 			return models.Transaction{}, err
 		}
 	}
-	return models.Transaction{BudgetID: input.BudgetID, CategoryID: input.CategoryID, PropertyID: input.PropertyID, AccountID: input.AccountID, Amount: input.Amount, Description: input.Description, Type: input.Type, Source: input.Source, Destination: input.Destination, Date: date}, nil
+	return models.Transaction{BudgetID: input.BudgetID, CategoryID: input.CategoryID, PropertyID: input.PropertyID, AccountID: input.AccountID, Amount: input.Amount, Description: input.Description, Type: input.Type, Source: input.Source, Destination: input.Destination, Date: date, Recurring: input.Recurring, RecurringType: input.RecurringType}, nil
 }
 func (h *Handler) DeleteTransactionHandler(w http.ResponseWriter, r *http.Request) {
 	userID, _ := AuthenticatedUserID(r.Context())

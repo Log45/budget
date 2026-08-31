@@ -7,6 +7,8 @@ type BudgetType int
 const (
 	YearlyBudget BudgetType = iota
 	MonthlyBudget
+	BiWeeklyBudget
+	SemiMonthlyBudget
 	WeeklyBudget
 	DailyBudget
 )

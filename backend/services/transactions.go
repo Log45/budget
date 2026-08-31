@@ -59,6 +59,9 @@ func (s *TransactionService) validate(ctx context.Context, userID int64, t *mode
 	if t.Amount <= 0 || t.Type < models.Income || t.Type > models.Transfer || t.Date.IsZero() {
 		return ErrInvalidTransaction
 	}
+	if t.Recurring && (t.RecurringType < models.YearlyBudget || t.RecurringType > models.DailyBudget) {
+		return ErrInvalidTransaction
+	}
 	if strings.TrimSpace(t.Description) == "" {
 		return errors.New("description is required")
 	}
